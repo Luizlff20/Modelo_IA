@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão de Bolsa</title>
+</head>
+<body>
+    <h1>Previsão de Bolsa</h1>
+    <form action="/predict" method="post">
+        <!-- Adicione campos de formulário para cada entrada necessária -->
+        <label for="nome_ies">Nome da universidade:</label>
+        <input type="text" name="nome_ies" required><br>
+
+        <label for="modalidade_ensino">Modalidade de Ensino:</label>
+        <input type="text" name="modalidade_ensino" required><br>
+
+        <label for="nome_curso">Nome do Curso:</label>
+        <input type="text" name="nome_curso" required><br>
+
+        <label for="nome_turno_curso">Turno do Curso:</label>
+        <input type="text" name="nome_turno_curso" required><br>
+
+        <label for="sexo_beneficiario">Sexo do Beneficiário:</label>
+        <input type="text" name="sexo_beneficiario" required><br>
+
+        <label for="raca_beneficiario">Qual a sua cor:</label>
+        <input type="text" name="raca_beneficiario" required><br>
+
+        <label for="regiao_beneficiario">Região:</label>
+        <input type="text" name="regiao_beneficiario" required><br>
+
+        <label for="sigla_uf_beneficiario">Sigla da UF:</label>
+        <input type="text" name="sigla_uf_beneficiario" required><br>
+
+        <label for="municipio_beneficiario">Município:</label>
+        <input type="text" name="municipio_beneficiario" required><br>
+
+        <!-- Adicione mais campos conforme necessário -->
+
+        <button type="submit">Prever</button>
+    </form>
+</body>
+</html>
+
+
+
+
