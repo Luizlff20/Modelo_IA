@@ -5,7 +5,7 @@ import pickle
 app = Flask(__name__)
 
 # Carregar o modelo CatBoost
-with open('meu_projeto\\srv\\modelo_catboost.pkl', 'rb') as file:
+with open('meu_projeto\srv\modelo_IA_catboost.pkl', 'rb') as file:
     model = pickle.load(file)
 
 # Rotas
