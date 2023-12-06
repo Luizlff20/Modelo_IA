@@ -9,7 +9,7 @@ app = Flask(__name__)
 with open('meu_projeto/srv/modelo_catboost.pkl', 'rb') as file:
     model = pickle.load(file)
 
-# Função para pré-processar strings
+# Função para pré-processar strings e filtrar letras em caixa alta
 def preprocess_strings(value):
     if isinstance(value, str):
         return unidecode(value.lower())
