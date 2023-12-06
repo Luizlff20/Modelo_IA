@@ -1,49 +1,77 @@
-from flask import Flask, render_template, request
+import numpy as np
+import os
+from flask import Flask, request, render_template, make_response
+import joblib
 import pandas as pd
-import pickle
+from unidecode import unidecode  # Certifique-se de ter a biblioteca instalada: pip install unidecode
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
+model = joblib.load('/content/modelo_catboost.pkl')
 
-# Carregar o modelo CatBoost
-with open('meu_projeto\srv\modelo_IA_catboost.pkl', 'rb') as file:
-    model = pickle.load(file)
+DEFAULT_PORT = 5500
 
-# Rotas
+# Função para pré-processar strings
+def preprocess_strings(value):
+    if isinstance(value, str):
+        return unidecode(value.lower())
+    return value
+
 @app.route('/')
-def index():
-    return render_template('index.html')
+def display_gui():
+    return render_template('template.html')
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    # Obter dados do formulário
-    nome_ies = request.form['nome_ies']
-    modalidade_ensino = request.form['modalidade_ensino']
-    nome_curso = request.form['nome_curso']
-    nome_turno_curso = request.form['nome_turno_curso']
-    sexo_beneficiario = request.form['sexo_beneficiario']
-    raca_beneficiario = request.form['raca_beneficiario']
-    regiao_beneficiario = request.form['regiao_beneficiario']
-    sigla_uf_beneficiario = request.form['sigla_uf_beneficiario']
-    municipio_beneficiario = request.form['municipio_beneficiario']
+@app.route('/verificar', methods=['POST'])
+def verificar():
+    try:
+        NOME_IES_BOLSA = request.form.get('universidade', '')
+        MODALIDADE_ENSINO_BOLSA = request.form.get('grindRadionsModalidade', '')
+        NOME_CURSO_BOLSA = request.form.get('curso', '')
+        NOME_TURNO_CURSO_BOLSA = request.form.get('grindRadionsTurno', '')
+        SEXO_BENEFICIARIO_BOLSA = request.form.get('grindRadionsSexo', '')
+        RACA_BENEFICIARIO_BOLSA = request.form.get('grindRadionsCor', '')
+        REGIAO_BENEFICIARIO_BOLSA = request.form.get('regiao', '')
+        SIGLA_UF_BENEFICIARIO_BOLSA = request.form.get('uf', '')
+        MUNICIPIO_BENEFICIARIO_BOLSA = request.form.get('municipio', '')
 
-    # Criar DataFrame com os dados do formulário
-    dados_formulario = pd.DataFrame({
-        'NOME_IES_BOLSA': [nome_ies],
-        'MODALIDADE_ENSINO_BOLSA': [modalidade_ensino],
-        'NOME_CURSO_BOLSA': [nome_curso],
-        'NOME_TURNO_CURSO_BOLSA': [nome_turno_curso],
-        'SEXO_BENEFICIARIO_BOLSA': [sexo_beneficiario],
-        'RACA_BENEFICIARIO_BOLSA': [raca_beneficiario],
-        'REGIAO_BENEFICIARIO_BOLSA': [regiao_beneficiario],
-        'SIGLA_UF_BENEFICIARIO_BOLSA': [sigla_uf_beneficiario],
-        'MUNICIPIO_BENEFICIARIO_BOLSA': [municipio_beneficiario]
-    })
+        # Aplicar pré-processamento aos dados de entrada
+        dados_teste = pd.DataFrame({
+            'NOME_IES_BOLSA': [NOME_IES_BOLSA],
+            'MODALIDADE_ENSINO_BOLSA': [MODALIDADE_ENSINO_BOLSA],
+            'NOME_CURSO_BOLSA': [NOME_CURSO_BOLSA],
+            'NOME_TURNO_CURSO_BOLSA': [NOME_TURNO_CURSO_BOLSA],
+            'SEXO_BENEFICIARIO_BOLSA': [SEXO_BENEFICIARIO_BOLSA],
+            'RACA_BENEFICIARIO_BOLSA': [RACA_BENEFICIARIO_BOLSA],
+            'REGIAO_BENEFICIARIO_BOLSA': [REGIAO_BENEFICIARIO_BOLSA],
+            'SIGLA_UF_BENEFICIARIO_BOLSA': [SIGLA_UF_BENEFICIARIO_BOLSA],
+            'MUNICIPIO_BENEFICIARIO_BOLSA': [MUNICIPIO_BENEFICIARIO_BOLSA],
+        })
 
-    # Fazer previsão usando o modelo CatBoost
-    predicao = model.predict(dados_formulario)
+        # Aplicar pré-processamento aos dados de entrada
+        for column in dados_teste.columns:
+            dados_teste[column] = dados_teste[column].apply(preprocess_strings)
 
-    # Exibir o resultado
-    return render_template('result.html', predicao=predicao[0])
+        # Fazer previsão usando o modelo treinado
+        classe_predita = model.predict(dados_teste)[0]
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        print(":::::::::: Dados de Teste :::::::::::")
+        print("Sexo: {}".format(SEXO_BENEFICIARIO_BOLSA))
+        print("Cor: {}".format(RACA_BENEFICIARIO_BOLSA))
+        print("Nome da Universidade: {}".format(NOME_IES_BOLSA))
+        print("Qual curso: {}".format(NOME_CURSO_BOLSA))
+        print("Modalidade: {}".format(MODALIDADE_ENSINO_BOLSA))
+        print("Horário: {}".format(NOME_TURNO_CURSO_BOLSA))
+        print("Região: {}".format(REGIAO_BENEFICIARIO_BOLSA))
+        print("UF: {}".format(SIGLA_UF_BENEFICIARIO_BOLSA))
+        print("Município: {}".format(MUNICIPIO_BENEFICIARIO_BOLSA))
+        print("Classe Predita: {}".format(str(classe_predita)))
+
+    except Exception as e:
+        print("Erro ao processar a solicitação:", str(e))
+        classe_predita = "Erro"
+
+    return render_template('template.html', classe=str(classe_predita))
+
+if __name__ == "__main__":
+    port = int(os.environ.get('PORT', DEFAULT_PORT))
+    app.run(host='0.0.0.0', port=port)
+
